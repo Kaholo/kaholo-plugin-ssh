@@ -1,9 +1,5 @@
-const childProcess = require("child_process");
-const { access } = require("fs/promises");
+const { access, lstat } = require("fs/promises");
 const fs = require("fs");
-const util = require("util");
-
-const exec = util.promisify(childProcess.exec);
 
 async function assertPath(value) {
   try {
@@ -49,9 +45,14 @@ function handleCommandOutput(commandOutput) {
   return commandOutput.stdout;
 }
 
+async function isPathFile(value) {
+  const pathStat = await lstat(value);
+  return pathStat.isFile();
+}
+
 module.exports = {
   assertPath,
-  exec,
   handleChildProcess,
   handleCommandOutput,
+  isPathFile,
 };

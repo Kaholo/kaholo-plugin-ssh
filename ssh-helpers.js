@@ -1,4 +1,7 @@
 const { readFile } = require("fs/promises");
+const path = require("path");
+
+const { Client: ScpClient } = require("node-scp");
 const { Client: SshClient } = require("ssh2");
 
 const { assertPath, handleChildProcess } = require("./helpers");
@@ -54,11 +57,6 @@ async function parseSshParams(params) {
   return connectionConfig;
 }
 
-async function parseSshParamsAndConnect(params) {
-  const connectionConfig = await parseSshParams(params);
-  return sshConnect(connectionConfig);
-}
-
 function executeOverSsh(sshClient, command, options) {
   return new Promise((res, rej) => {
     sshClient.exec(command, (error, channel) => {
@@ -69,9 +67,24 @@ function executeOverSsh(sshClient, command, options) {
         channel.on("close", () => sshClient.end());
       }
 
-      return handleChildProcess(channel, { exitSignal: "close" }).then(res).catch(rej);
+      return handleChildProcess(channel, { exitSignal: "close" })
+        .then(res)
+        .catch(rej)
+        .finally(() => sshClient.end());
     });
   });
+}
+
+async function uploadFileToRemote(connectionConfig, localPath, remotePath = "") {
+  const scpClient = await ScpClient(connectionConfig);
+
+  return scpClient.uploadFile(localPath, path.join(remotePath, path.basename(localPath)));
+}
+
+async function uploadDirectoryToRemote(connectionConfig, localPath, remotePath = "") {
+  const scpClient = await ScpClient(connectionConfig);
+
+  return scpClient.uploadDir(localPath, path.join(remotePath, path.basename(localPath)));
 }
 
 function isSshPrivateKey(value) {
@@ -83,7 +96,8 @@ function isSshPrivateKey(value) {
 
 module.exports = {
   parseSshParams,
-  parseSshParamsAndConnect,
   sshConnect,
   executeOverSsh,
+  uploadDirectoryToRemote,
+  uploadFileToRemote,
 };

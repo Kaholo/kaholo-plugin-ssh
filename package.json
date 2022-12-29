@@ -17,6 +17,7 @@
   "homepage": "https://github.com/Kaholo/kaholo-plugin-ssh#readme",
   "dependencies": {
     "@kaholo/plugin-library": "^2.1.2",
+    "node-scp": "^0.0.22",
     "ssh2": "^1.11.0"
   },
   "devDependencies": {
