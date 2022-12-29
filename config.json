@@ -96,6 +96,29 @@
           "learnUrl": "https://en.wikipedia.org/wiki/Secure_copy_protocol"
         }
       ]
+    },
+    {
+      "name": "secureCopyFromRemoteHost",
+      "viewName": "Secure Copy from Remote Host",
+      "params": [
+        {
+          "name": "localPath",
+          "viewName": "Local Path",
+          "type": "string",
+          "description": "Path on the Kaholo agent to which the file or directory will be copied",
+          "placeholder": "testsuite/results/",
+          "learnUrl": "https://en.wikipedia.org/wiki/Secure_copy_protocol"
+        },
+        {
+          "name": "remotePath",
+          "viewName": "Remote Path",
+          "type": "string",
+          "description": "Path on the remote server to the file or directory to be copied",
+          "placeholder": "/opt/testsuite/run20221214",
+          "required": true,
+          "learnUrl": "https://en.wikipedia.org/wiki/Secure_copy_protocol"
+        }
+      ]
     }
   ]
 }

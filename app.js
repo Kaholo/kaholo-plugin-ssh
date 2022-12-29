@@ -6,6 +6,7 @@ const {
   parseSshParams,
   uploadFileToRemote,
   uploadDirectoryToRemote,
+  downloadFromRemote,
 } = require("./ssh-helpers");
 const {
   handleCommandOutput,
@@ -43,7 +44,18 @@ async function secureCopyToRemoteHost(params) {
   return uploadDirectoryToRemote(connectionConfig, localPath, remotePath);
 }
 
+async function secureCopyFromRemoteHost(params) {
+  const {
+    localPath,
+    remotePath,
+  } = params;
+
+  const connectionConfig = await parseSshParams(params);
+  return downloadFromRemote(connectionConfig, remotePath, localPath);
+}
+
 module.exports = bootstrap({
   executeCommand,
   secureCopyToRemoteHost,
+  secureCopyFromRemoteHost,
 });
