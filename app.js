@@ -1,25 +1,23 @@
 const { bootstrap } = require("@kaholo/plugin-library");
 
-async function hello(params) {
+const {
+  parseSshParamsAndConnect,
+  executeOverSsh,
+} = require("./ssh-helpers");
+const { handleCommandOutput } = require("./helpers");
+
+async function executeCommand(params) {
   const {
-    helloName,
-    saySecret,
-    secret,
+    command,
   } = params;
 
-  let greeting = `Hello ${helloName}!`;
+  const sshClient = await parseSshParamsAndConnect(params);
 
-  if (saySecret && !secret) {
-    throw new Error("No secret was provided to say. Please provide a secret or uncheck \"Say Secret\".");
-  }
+  const commandOutput = await executeOverSsh(sshClient, command);
 
-  if (saySecret) {
-    greeting += `\nHere is the secret: ${secret}`;
-  }
-
-  return greeting;
+  return handleCommandOutput(commandOutput);
 }
 
 module.exports = bootstrap({
-  hello,
+  executeCommand,
 });

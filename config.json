@@ -1,62 +1,76 @@
 {
-  "name": "kaholo-plugin-template",
-  "viewName": "Kaholo Template Plugin",
+  "name": "ssh",
+  "viewName": "SSH",
   "type": "executer",
   "main": "app.js",
   "execProgram": "node",
   "exposeRoute": false,
   "imgUrl": "logo.png",
-  "version": "2.0.0",
-  "description": "This plugin is only a generic template.",
-  "category": [
-    "Basic Tools"
-  ],
+  "version": "1.0.0",
+  "description": "Kaholo Plugin with SSH utilities, such as remote command execution and secure copy.",
+  "category": "Basic Tools",
   "keywords": [
-    "template",
-    "plugin",
-    "kaholo",
-    "hello"
-   ],
-  "settings": [
-    {
-      "name": "helloName",
-      "viewName": "Default Hello Name",
-      "type": "string",
-      "description": "The person to whom to say hello by default",
-      "learnUrl": "https://docs.apify.com/api/v2#/introduction/authentication"
-    }
+    "ssh"
   ],
+  "auth": {
+    "authId": "sshAccount",
+    "params": [
+      {
+        "name": "hostname",
+        "viewName": "Hostname",
+        "type": "string",
+        "description": "Hostname or IP address.",
+        "placeholder": "192.168.10.7",
+        "required": true
+      },
+      {
+        "name": "username",
+        "viewName": "Username",
+        "type": "string",
+        "description": "Username to authenticate with the host.",
+        "placeholder": "root",
+        "required": true
+      },
+      {
+        "name": "password",
+        "viewName": "Password",
+        "type": "vault",
+        "description": "Password to authenticate with the host. In case both SSH Key and Password parameters are provided, the SSH Key has priority."
+      },
+      {
+        "name": "privateKey",
+        "viewName": "SSH Key",
+        "type": "vault",
+        "description": "Key to authenticate with the host. This parameter accepts both the SSH key file content and a path to the SSH key file on the agent.",
+        "placeholder": "-----BEGIN OPENSSH PRIVATE KEY-----"
+      },
+      {
+        "name": "privateKeyPassphrase",
+        "viewName": "SSH Key Passphrase",
+        "type": "vault",
+        "description": "Passphrase protecting the private key, set during key generation. Empty by default."
+      },
+      {
+        "name": "port",
+        "viewName": "Port",
+        "type": "int",
+        "description": "The port used to connect with SSH to the remote host.",
+        "default": 22
+      }
+    ]
+  },
   "methods": [
     {
-      "name": "hello",
-      "viewName": "Say hello",
+      "name": "executeCommand",
+      "viewName": "Execute Command",
       "params": [
         {
-          "name": "helloName",
-          "viewName": "Hello Name",
-          "type": "string",
-          "required": false,
-          "placeholder": "World",
-          "default": "World",
-          "description": "The person to whom to say hello",
-          "learnUrl": "https://en.wikipedia.org/wiki/%22Hello,_World!%22_program"
-        },
-        {
-          "name": "secret",
-          "viewName": "Secret",
-          "type": "vault",
-          "required": false,
-          "description": "A secret we might also say.",
-          "learnUrl": "https://en.wikipedia.org/wiki/%22Hello,_World!%22_program"
-        },
-        {
-          "name": "saySecret",
-          "viewName": "Say secret",
-          "type": "boolean",
-          "required": false,
-          "default": false,
-          "description": "If checked we'll also say the secret.",
-          "learnUrl": "https://en.wikipedia.org/wiki/%22Hello,_World!%22_program"
+          "name": "command",
+          "viewName": "Command",
+          "type": "text",
+          "description": "The command to execute on the remote host.",
+          "placeholder": "uptime",
+          "required": true
         }
       ]
     }
