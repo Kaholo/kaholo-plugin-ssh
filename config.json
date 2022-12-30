@@ -136,8 +136,8 @@
           "name": "remotePath",
           "viewName": "Remote Path",
           "type": "string",
-          "description": "Path on the remote server to which the file or directory will be copied",
-          "placeholder": "deploy/jarfiles/",
+          "description": "Path on the remote server at which the vault item will be saved",
+          "placeholder": "deploy/jarfiles/kaholo-vault-1",
           "learnUrl": "https://en.wikipedia.org/wiki/Secure_copy_protocol"
         }
       ]

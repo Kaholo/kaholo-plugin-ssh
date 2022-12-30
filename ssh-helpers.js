@@ -76,16 +76,26 @@ function executeOverSsh(sshClient, command, options) {
   });
 }
 
-async function uploadFileToRemote(connectionConfig, localPath, remotePath = "") {
+async function uploadFileToRemote(connectionConfig, localPath, remotePath = "", treatRemotePathAsDirectory = true) {
   const scpClient = await createScpClient(connectionConfig);
+  const resolvedRemotePath = (
+    treatRemotePathAsDirectory
+      ? path.join(remotePath, path.basename(localPath))
+      : remotePath
+  );
 
-  return scpClient.uploadFile(localPath, path.join(remotePath, path.basename(localPath)));
+  return scpClient.uploadFile(localPath, resolvedRemotePath);
 }
 
-async function uploadDirectoryToRemote(connectionConfig, localPath, remotePath = "") {
+async function uploadDirectoryToRemote(connectionConfig, localPath, remotePath = "", treatRemotePathAsDirectory = true) {
   const scpClient = await createScpClient(connectionConfig);
+  const resolvedRemotePath = (
+    treatRemotePathAsDirectory
+      ? path.join(remotePath, path.basename(localPath))
+      : remotePath
+  );
 
-  return scpClient.uploadDir(localPath, path.join(remotePath, path.basename(localPath)));
+  return scpClient.uploadDir(localPath, resolvedRemotePath);
 }
 
 async function downloadFromRemote(connectionConfig, remotePath, localPath = "") {
