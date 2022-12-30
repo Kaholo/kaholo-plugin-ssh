@@ -1,8 +1,7 @@
 const { readFile } = require("fs/promises");
 const path = require("path");
-
 const { Client: createScpClient } = require("node-scp");
-const { Client: SshClient } = require("ssh2");
+const { Client: SshClient } = require("ssh2-1200-fix");
 
 const { assertPath, handleChildProcess } = require("./helpers");
 
@@ -44,12 +43,14 @@ async function parseSshParams(params) {
 
   let keyContent = privateKey;
   if (!isSshPrivateKey(privateKey)) {
-    console.info("Assuming Private Key parameter is a path, attempting to read the file contents.");
-    await assertPath(privateKey);
-    keyContent = await readFile(privateKey, { encoding: "utf-8" });
+    console.error("Assuming Private Key parameter is a path, attempting to read the file contents.");
+
+    const absolutePathToPrivateKey = path.resolve(privateKey);
+    await assertPath(absolutePathToPrivateKey);
+    keyContent = await readFile(absolutePathToPrivateKey);
   }
 
-  connectionConfig.privateKey = Buffer.from(keyContent);
+  connectionConfig.privateKey = keyContent;
   if (privateKeyPassphrase) {
     connectionConfig.passphrase = privateKeyPassphrase;
   }

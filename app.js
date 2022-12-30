@@ -1,5 +1,7 @@
+const path = require("path");
 const { bootstrap } = require("@kaholo/plugin-library");
 
+const kaholoPluginLibrary = require("@kaholo/plugin-library");
 const {
   sshConnect,
   executeOverSsh,
@@ -35,13 +37,14 @@ async function secureCopyToRemoteHost(params) {
 
   const connectionConfig = await parseSshParams(params);
 
-  await assertPath(localPath);
-  const isLocalPathFile = await isPathFile(localPath);
+  const absoluteLocalPath = path.resolve(localPath);
+  await assertPath(absoluteLocalPath);
+  const isLocalPathFile = await isPathFile(absoluteLocalPath);
 
   if (isLocalPathFile) {
-    return uploadFileToRemote(connectionConfig, localPath, remotePath);
+    return uploadFileToRemote(connectionConfig, absoluteLocalPath, remotePath);
   }
-  return uploadDirectoryToRemote(connectionConfig, localPath, remotePath);
+  return uploadDirectoryToRemote(connectionConfig, absoluteLocalPath, remotePath);
 }
 
 async function secureCopyFromRemoteHost(params) {
@@ -54,8 +57,23 @@ async function secureCopyFromRemoteHost(params) {
   return downloadFromRemote(connectionConfig, remotePath, localPath);
 }
 
+async function secureCopyFromVaultToRemoteHost(params) {
+  const {
+    vaultItem,
+    remotePath,
+  } = params;
+
+  const connectionConfig = await parseSshParams(params);
+
+  kaholoPluginLibrary.helpers.temporaryFileSentinel([vaultItem], async (localPath) => {
+    const resolvedRemotePath = remotePath || `kaholo-vault-item-${Math.random().toString(36).slice(2)}`;
+    await uploadFileToRemote(connectionConfig, localPath, resolvedRemotePath);
+  });
+}
+
 module.exports = bootstrap({
   executeCommand,
   secureCopyToRemoteHost,
   secureCopyFromRemoteHost,
+  secureCopyFromVaultToRemoteHost,
 });

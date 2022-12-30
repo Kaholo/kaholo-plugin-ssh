@@ -5,9 +5,8 @@ async function assertPath(value) {
   try {
     await access(value, fs.constants.F_OK);
   } catch {
-    return false;
+    throw new Error(`Path ${value} does not exist!`);
   }
-  return true;
 }
 
 function handleChildProcess(childProcessInstance, options) {

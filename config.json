@@ -119,6 +119,28 @@
           "learnUrl": "https://en.wikipedia.org/wiki/Secure_copy_protocol"
         }
       ]
+    },
+    {
+      "name": "secureCopyFromVaultToRemoteHost",
+      "viewName": "Secure Copy from Vault to Remote Host",
+      "params": [
+        {
+          "name": "vaultItem",
+          "viewName": "Vault Item",
+          "type": "vault",
+          "description": "Item from the Kaholo vault to upload to the remote host",
+          "required": true,
+          "learnUrl": "https://en.wikipedia.org/wiki/Secure_copy_protocol"
+        },
+        {
+          "name": "remotePath",
+          "viewName": "Remote Path",
+          "type": "string",
+          "description": "Path on the remote server to which the file or directory will be copied",
+          "placeholder": "deploy/jarfiles/",
+          "learnUrl": "https://en.wikipedia.org/wiki/Secure_copy_protocol"
+        }
+      ]
     }
   ]
 }
