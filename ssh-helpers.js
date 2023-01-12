@@ -1,9 +1,8 @@
 const { readFile } = require("fs/promises");
 const path = require("path");
-const { Client: createScpClient } = require("node-scp");
 const { Client: SshClient } = require("ssh2-1200-fix");
 
-const { assertPath, handleChildProcess } = require("./helpers");
+const { assertPath } = require("./helpers");
 
 function sshConnect(connectionConfig) {
   const sshClient = new SshClient();
@@ -58,55 +57,29 @@ async function parseSshParams(params) {
   return connectionConfig;
 }
 
-function executeOverSsh(sshClient, command, options) {
-  return new Promise((res, rej) => {
-    sshClient.exec(command, (error, channel) => {
-      if (error) {
-        return rej(error);
-      }
-      if (options?.endConnectionAfter) {
-        channel.on("close", () => sshClient.end());
-      }
+async function resolveRemotePath(scpClient, localPath, remotePath) {
+  let resolvedRemotePath = remotePath;
 
-      return handleChildProcess(channel, { exitSignal: "close" })
-        .then(res)
-        .catch(rej)
-        .finally(() => sshClient.end());
-    });
-  });
-}
-
-async function uploadFileToRemote(connectionConfig, localPath, remotePath = "", treatRemotePathAsDirectory = true) {
-  const scpClient = await createScpClient(connectionConfig);
-  const resolvedRemotePath = (
-    treatRemotePathAsDirectory
-      ? path.join(remotePath, path.basename(localPath))
-      : remotePath
-  );
-
-  return scpClient.uploadFile(localPath, resolvedRemotePath);
-}
-
-async function uploadDirectoryToRemote(connectionConfig, localPath, remotePath = "", treatRemotePathAsDirectory = true) {
-  const scpClient = await createScpClient(connectionConfig);
-  const resolvedRemotePath = (
-    treatRemotePathAsDirectory
-      ? path.join(remotePath, path.basename(localPath))
-      : remotePath
-  );
-
-  return scpClient.uploadDir(localPath, resolvedRemotePath);
-}
-
-async function downloadFromRemote(connectionConfig, remotePath, localPath = "") {
-  const scpClient = await createScpClient(connectionConfig);
-
-  const remotePathStat = await scpClient.lstat(remotePath);
-
-  if (remotePathStat.isFile()) {
-    return scpClient.downloadFile(remotePath, localPath);
+  const remotePathStat = await lstatSafe(scpClient, remotePath || "./");
+  if (remotePathStat.exists && remotePathStat.isDirectory()) {
+    resolvedRemotePath = path.join(remotePath, path.basename(localPath));
   }
-  return scpClient.downloadDir(remotePath, localPath);
+
+  return resolvedRemotePath;
+}
+
+async function lstatSafe(scpClient, remotePath) {
+  let stat;
+  try {
+    stat = await scpClient.lstat(remotePath);
+    Object.defineProperty(stat, "exists", {
+      value: true,
+    });
+  } catch {
+    stat = { exists: false };
+  }
+
+  return stat;
 }
 
 function isSshPrivateKey(value) {
@@ -116,11 +89,16 @@ function isSshPrivateKey(value) {
   return containsBeginSignature && containsEndSignature;
 }
 
+function commonScpErrorsCatcher(error) {
+  if (error.message === "No such file") {
+    throw new Error("Remote Path not found. Must be an existing directory on the Remote System.");
+  }
+  throw error;
+}
+
 module.exports = {
+  commonScpErrorsCatcher,
+  resolveRemotePath,
   parseSshParams,
   sshConnect,
-  executeOverSsh,
-  uploadDirectoryToRemote,
-  uploadFileToRemote,
-  downloadFromRemote,
 };

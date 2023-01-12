@@ -1,15 +1,8 @@
 const path = require("path");
-const { bootstrap } = require("@kaholo/plugin-library");
-
 const kaholoPluginLibrary = require("@kaholo/plugin-library");
-const {
-  sshConnect,
-  executeOverSsh,
-  parseSshParams,
-  uploadFileToRemote,
-  uploadDirectoryToRemote,
-  downloadFromRemote,
-} = require("./ssh-helpers");
+
+const sshService = require("./ssh-service");
+const { parseSshParams } = require("./ssh-helpers");
 const {
   handleCommandOutput,
   assertPath,
@@ -22,9 +15,7 @@ async function executeCommand(params) {
   } = params;
 
   const connectionConfig = await parseSshParams(params);
-  const sshClient = await sshConnect(connectionConfig);
-
-  const commandOutput = await executeOverSsh(sshClient, command);
+  const commandOutput = await sshService.executeOverSsh(connectionConfig, command);
 
   return handleCommandOutput(commandOutput);
 }
@@ -42,9 +33,9 @@ async function secureCopyToRemoteHost(params) {
   const isLocalPathFile = await isPathFile(absoluteLocalPath);
 
   if (isLocalPathFile) {
-    return uploadFileToRemote(connectionConfig, absoluteLocalPath, remotePath);
+    return sshService.uploadFileToRemote(connectionConfig, absoluteLocalPath, remotePath);
   }
-  return uploadDirectoryToRemote(connectionConfig, absoluteLocalPath, remotePath);
+  return sshService.uploadDirectoryToRemote(connectionConfig, absoluteLocalPath, remotePath);
 }
 
 async function secureCopyFromRemoteHost(params) {
@@ -54,7 +45,7 @@ async function secureCopyFromRemoteHost(params) {
   } = params;
 
   const connectionConfig = await parseSshParams(params);
-  return downloadFromRemote(connectionConfig, remotePath, localPath);
+  return sshService.downloadFromRemote(connectionConfig, remotePath, localPath);
 }
 
 async function secureCopyFromVaultToRemoteHost(params) {
@@ -72,11 +63,11 @@ async function secureCopyFromVaultToRemoteHost(params) {
       console.error(`Remote Path parameter was not provided, vault item will be saved at ~/${resolvedRemotePath} on the remote host`);
     }
 
-    await uploadFileToRemote(connectionConfig, localPath, resolvedRemotePath, false);
+    await sshService.uploadFileToRemote(connectionConfig, localPath, resolvedRemotePath);
   });
 }
 
-module.exports = bootstrap({
+module.exports = kaholoPluginLibrary.bootstrap({
   executeCommand,
   secureCopyToRemoteHost,
   secureCopyFromRemoteHost,
