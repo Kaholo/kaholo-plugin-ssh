@@ -1,10 +1,11 @@
 const { Client: createScpClient } = require("node-scp");
 
-const { handleChildProcess } = require("./helpers");
+const { handleChildProcess, safeStat } = require("./helpers");
 const {
-  resolveRemotePath,
+  resolveTargetPath,
   commonScpErrorsCatcher,
   sshConnect,
+  safeRemoteStat,
 } = require("./ssh-helpers");
 
 async function executeOverSsh(params) {
@@ -42,10 +43,10 @@ async function uploadFileToRemote(params) {
   } = params;
 
   const scpClient = await createScpClient(connectionConfig);
-  const resolvedRemotePath = await resolveRemotePath({
-    scpClient,
-    localPath,
-    remotePath,
+  const resolvedRemotePath = await resolveTargetPath({
+    sourcePath: localPath,
+    targetPath: remotePath,
+    getSafeStat: (pathForStat) => safeRemoteStat(scpClient, pathForStat),
     ...pathResolutionOptions,
   });
 
@@ -63,10 +64,10 @@ async function uploadDirectoryToRemote(params) {
   } = params;
 
   const scpClient = await createScpClient(connectionConfig);
-  const resolvedRemotePath = await resolveRemotePath({
-    scpClient,
-    localPath,
-    remotePath,
+  const resolvedRemotePath = await resolveTargetPath({
+    sourcePath: localPath,
+    targetPath: remotePath,
+    getSafeStat: (pathForStat) => safeRemoteStat(scpClient, pathForStat),
     ...pathResolutionOptions,
   });
 
@@ -80,18 +81,26 @@ async function downloadFromRemote(params) {
     connectionConfig,
     remotePath,
     localPath = "",
+    pathResolutionOptions,
   } = params;
   const scpClient = await createScpClient(connectionConfig);
+
+  const resolvedLocalPath = await resolveTargetPath({
+    sourcePath: remotePath,
+    targetPath: localPath,
+    getSafeStat: safeStat,
+    ...pathResolutionOptions,
+  });
 
   const remotePathStat = await scpClient.lstat(remotePath).catch(commonScpErrorsCatcher);
 
   if (remotePathStat.isFile()) {
-    await scpClient.downloadFile(remotePath, localPath);
+    await scpClient.downloadFile(remotePath, resolvedLocalPath);
   } else {
-    await scpClient.downloadDir(remotePath, localPath);
+    await scpClient.downloadDir(remotePath, resolvedLocalPath);
   }
 
-  return localPath;
+  return resolvedLocalPath;
 }
 
 module.exports = {

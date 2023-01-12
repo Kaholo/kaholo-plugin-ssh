@@ -57,15 +57,17 @@ async function secureCopyToRemoteHost(params) {
 
 async function secureCopyFromRemoteHost(params) {
   const {
-    localPath,
+    localPath = ".",
     remotePath,
   } = params;
 
+  const absoluteLocalPath = path.resolve(localPath);
+
   const connectionConfig = await parseSshParams(params);
-  const saveLocalPath = sshService.downloadFromRemote({
+  const saveLocalPath = await sshService.downloadFromRemote({
     connectionConfig,
     remotePath,
-    localPath,
+    localPath: absoluteLocalPath,
   });
 
   return {

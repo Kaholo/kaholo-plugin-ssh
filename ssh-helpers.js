@@ -57,24 +57,24 @@ async function parseSshParams(params) {
   return connectionConfig;
 }
 
-async function resolveRemotePath(params) {
+async function resolveTargetPath(params) {
   const {
-    scpClient,
-    localPath,
-    remotePath,
+    getSafeStat,
+    sourcePath,
+    targetPath,
     altBasename,
   } = params;
 
-  let resolvedRemotePath = remotePath || "./";
-  const remotePathStat = await lstatSafe(scpClient, resolvedRemotePath);
-  if (remotePathStat.exists && remotePathStat.isDirectory()) {
-    resolvedRemotePath = path.join(resolvedRemotePath, altBasename || path.basename(localPath));
+  let resolvedTargetPath = targetPath || "./";
+  const sourcePathStat = await getSafeStat(resolvedTargetPath);
+  if (sourcePathStat.exists && sourcePathStat.isDirectory()) {
+    resolvedTargetPath = path.join(resolvedTargetPath, altBasename || path.basename(sourcePath));
   }
 
-  return resolvedRemotePath;
+  return resolvedTargetPath;
 }
 
-async function lstatSafe(scpClient, remotePath) {
+async function safeRemoteStat(scpClient, remotePath) {
   let stat;
   try {
     stat = await scpClient.lstat(remotePath);
@@ -104,7 +104,8 @@ function commonScpErrorsCatcher(error) {
 
 module.exports = {
   commonScpErrorsCatcher,
-  resolveRemotePath,
+  resolveTargetPath,
   parseSshParams,
   sshConnect,
+  safeRemoteStat,
 };

@@ -44,13 +44,28 @@ function handleCommandOutput(commandOutput) {
   return commandOutput.stdout;
 }
 
+async function safeStat(localPath) {
+  let stat = {};
+  try {
+    stat = await lstat(localPath);
+    Object.defineProperty(stat, "exists", {
+      value: true,
+    });
+  } catch {
+    stat = { exists: false };
+  }
+
+  return stat;
+}
+
 async function isPathFile(value) {
-  const pathStat = await lstat(value);
-  return pathStat.isFile();
+  const pathStat = await safeStat(value);
+  return pathStat.exists && pathStat.isFile();
 }
 
 module.exports = {
   assertPath,
+  safeStat,
   handleChildProcess,
   handleCommandOutput,
   isPathFile,
