@@ -1,3 +1,11 @@
+const Module = require("module");
+
+const originalRequire = Module.prototype.require;
+Module.prototype.require = function modifiedRequire(id, ...rest) {
+  const resolvedId = id === "ssh2" ? "ssh2-1200-fix" : id;
+  return originalRequire.call(this, resolvedId, ...rest);
+};
+
 const path = require("path");
 const { bootstrap } = require("@kaholo/plugin-library");
 
