@@ -15,7 +15,10 @@ async function executeCommand(params) {
   } = params;
 
   const connectionConfig = await parseSshParams(params);
-  const commandOutput = await sshService.executeOverSsh(connectionConfig, command);
+  const commandOutput = await sshService.executeOverSsh({
+    connectionConfig,
+    command,
+  });
 
   return handleCommandOutput(commandOutput);
 }
@@ -32,10 +35,24 @@ async function secureCopyToRemoteHost(params) {
   await assertPath(absoluteLocalPath);
   const isLocalPathFile = await isPathFile(absoluteLocalPath);
 
+  let saveRemotePath;
   if (isLocalPathFile) {
-    return sshService.uploadFileToRemote(connectionConfig, absoluteLocalPath, remotePath);
+    saveRemotePath = await sshService.uploadFileToRemote({
+      connectionConfig,
+      localPath: absoluteLocalPath,
+      remotePath,
+    });
+  } else {
+    saveRemotePath = await sshService.uploadDirectoryToRemote({
+      connectionConfig,
+      localPath: absoluteLocalPath,
+      remotePath,
+    });
   }
-  return sshService.uploadDirectoryToRemote(connectionConfig, absoluteLocalPath, remotePath);
+
+  return {
+    remotePath: saveRemotePath,
+  };
 }
 
 async function secureCopyFromRemoteHost(params) {
@@ -45,7 +62,15 @@ async function secureCopyFromRemoteHost(params) {
   } = params;
 
   const connectionConfig = await parseSshParams(params);
-  return sshService.downloadFromRemote(connectionConfig, remotePath, localPath);
+  const saveLocalPath = sshService.downloadFromRemote({
+    connectionConfig,
+    remotePath,
+    localPath,
+  });
+
+  return {
+    localPath: saveLocalPath,
+  };
 }
 
 async function secureCopyFromVaultToRemoteHost(params) {
@@ -55,16 +80,22 @@ async function secureCopyFromVaultToRemoteHost(params) {
   } = params;
 
   const connectionConfig = await parseSshParams(params);
+  const result = { remotePath };
 
-  return kaholoPluginLibrary.helpers.temporaryFileSentinel([vaultItem], async (localPath) => {
-    let resolvedRemotePath = remotePath;
-    if (!remotePath) {
-      resolvedRemotePath = `kaholo-vault-item-${Math.random().toString(36).slice(2)}`;
-      console.error(`Remote Path parameter was not provided, vault item will be saved at ~/${resolvedRemotePath} on the remote host`);
-    }
+  await kaholoPluginLibrary.helpers.temporaryFileSentinel([vaultItem], async (localPath) => {
+    const saveRemotePath = await sshService.uploadFileToRemote({
+      connectionConfig,
+      localPath,
+      remotePath,
+      pathResolutionOptions: {
+        altBasename: `kaholo-vault-item-${Math.random().toString(36).slice(2)}`,
+      },
+    });
 
-    await sshService.uploadFileToRemote(connectionConfig, localPath, resolvedRemotePath);
+    result.remotePath = saveRemotePath;
   });
+
+  return result;
 }
 
 module.exports = kaholoPluginLibrary.bootstrap({

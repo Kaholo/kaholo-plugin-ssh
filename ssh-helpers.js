@@ -57,12 +57,18 @@ async function parseSshParams(params) {
   return connectionConfig;
 }
 
-async function resolveRemotePath(scpClient, localPath, remotePath) {
-  let resolvedRemotePath = remotePath;
+async function resolveRemotePath(params) {
+  const {
+    scpClient,
+    localPath,
+    remotePath,
+    altBasename,
+  } = params;
 
-  const remotePathStat = await lstatSafe(scpClient, remotePath || "./");
+  let resolvedRemotePath = remotePath || "./";
+  const remotePathStat = await lstatSafe(scpClient, resolvedRemotePath);
   if (remotePathStat.exists && remotePathStat.isDirectory()) {
-    resolvedRemotePath = path.join(remotePath, path.basename(localPath));
+    resolvedRemotePath = path.join(resolvedRemotePath, altBasename || path.basename(localPath));
   }
 
   return resolvedRemotePath;

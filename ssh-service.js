@@ -7,14 +7,21 @@ const {
   sshConnect,
 } = require("./ssh-helpers");
 
-async function executeOverSsh(connectionConfig, command, options) {
+async function executeOverSsh(params) {
+  const {
+    connectionConfig,
+    command,
+    endConnectionAfter = true,
+  } = params;
+
   const sshClient = await sshConnect(connectionConfig);
+
   return new Promise((res, rej) => {
     sshClient.exec(command, (error, channel) => {
       if (error) {
         return rej(error);
       }
-      if (options?.endConnectionAfter) {
+      if (endConnectionAfter) {
         channel.on("close", () => sshClient.end());
       }
 
@@ -26,29 +33,65 @@ async function executeOverSsh(connectionConfig, command, options) {
   });
 }
 
-async function uploadFileToRemote(connectionConfig, localPath, remotePath = "") {
-  const scpClient = await createScpClient(connectionConfig);
-  const resolvedRemotePath = await resolveRemotePath(scpClient, localPath, remotePath);
+async function uploadFileToRemote(params) {
+  const {
+    connectionConfig,
+    localPath,
+    remotePath,
+    pathResolutionOptions = {},
+  } = params;
 
-  return scpClient.uploadFile(localPath, resolvedRemotePath).catch(commonScpErrorsCatcher);
+  const scpClient = await createScpClient(connectionConfig);
+  const resolvedRemotePath = await resolveRemotePath({
+    scpClient,
+    localPath,
+    remotePath,
+    ...pathResolutionOptions,
+  });
+
+  await scpClient.uploadFile(localPath, resolvedRemotePath).catch(commonScpErrorsCatcher);
+
+  return resolvedRemotePath;
 }
 
-async function uploadDirectoryToRemote(connectionConfig, localPath, remotePath = "") {
-  const scpClient = await createScpClient(connectionConfig);
-  const resolvedRemotePath = await resolveRemotePath(scpClient, localPath, remotePath);
+async function uploadDirectoryToRemote(params) {
+  const {
+    connectionConfig,
+    localPath,
+    remotePath,
+    pathResolutionOptions = {},
+  } = params;
 
-  return scpClient.uploadDir(localPath, resolvedRemotePath).catch(commonScpErrorsCatcher);
+  const scpClient = await createScpClient(connectionConfig);
+  const resolvedRemotePath = await resolveRemotePath({
+    scpClient,
+    localPath,
+    remotePath,
+    ...pathResolutionOptions,
+  });
+
+  await scpClient.uploadDir(localPath, resolvedRemotePath).catch(commonScpErrorsCatcher);
+
+  return resolvedRemotePath;
 }
 
-async function downloadFromRemote(connectionConfig, remotePath, localPath = "") {
+async function downloadFromRemote(params) {
+  const {
+    connectionConfig,
+    remotePath,
+    localPath = "",
+  } = params;
   const scpClient = await createScpClient(connectionConfig);
 
   const remotePathStat = await scpClient.lstat(remotePath).catch(commonScpErrorsCatcher);
 
   if (remotePathStat.isFile()) {
-    return scpClient.downloadFile(remotePath, localPath);
+    await scpClient.downloadFile(remotePath, localPath);
+  } else {
+    await scpClient.downloadDir(remotePath, localPath);
   }
-  return scpClient.downloadDir(remotePath, localPath);
+
+  return localPath;
 }
 
 module.exports = {
