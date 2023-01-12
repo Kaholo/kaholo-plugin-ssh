@@ -99,6 +99,11 @@ async function downloadFromRemote(params) {
   if (remotePathStat.isFile()) {
     await scpClient.downloadFile(remotePath, resolvedLocalPath);
   } else {
+    const isLocalPathFile = (await safeStat(resolvedLocalPath)).isFile();
+    if (isLocalPathFile) {
+      throw new Error(`Can't save directory to ${resolvedLocalPath}, because it's a file, delete the file first or change the Local Path`);
+    }
+
     await scpClient.downloadDir(remotePath, resolvedLocalPath);
   }
 
