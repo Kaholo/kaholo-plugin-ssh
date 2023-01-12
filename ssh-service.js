@@ -1,10 +1,13 @@
 const { Client: createScpClient } = require("node-scp");
 
-const { handleChildProcess, safeStat } = require("./helpers");
 const {
+  handleChildProcess,
+  safeStat,
   resolveTargetPath,
+} = require("./helpers");
+const {
   commonScpErrorsCatcher,
-  sshConnect,
+  createSshConnection,
   safeRemoteStat,
 } = require("./ssh-helpers");
 
@@ -15,7 +18,7 @@ async function executeOverSsh(params) {
     endConnectionAfter = true,
   } = params;
 
-  const sshClient = await sshConnect(connectionConfig);
+  const sshClient = await createSshConnection(connectionConfig);
 
   return new Promise((res, rej) => {
     sshClient.exec(command, (error, channel) => {
@@ -83,8 +86,8 @@ async function downloadFromRemote(params) {
     localPath = "",
     pathResolutionOptions,
   } = params;
-  const scpClient = await createScpClient(connectionConfig);
 
+  const scpClient = await createScpClient(connectionConfig);
   const resolvedLocalPath = await resolveTargetPath({
     sourcePath: remotePath,
     targetPath: localPath,
@@ -93,7 +96,6 @@ async function downloadFromRemote(params) {
   });
 
   const remotePathStat = await scpClient.lstat(remotePath).catch(commonScpErrorsCatcher);
-
   if (remotePathStat.isFile()) {
     await scpClient.downloadFile(remotePath, resolvedLocalPath);
   } else {

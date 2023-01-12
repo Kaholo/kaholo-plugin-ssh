@@ -4,7 +4,7 @@ const { Client: SshClient } = require("ssh2-1200-fix");
 
 const { assertPath } = require("./helpers");
 
-function sshConnect(connectionConfig) {
+function createSshConnection(connectionConfig) {
   const sshClient = new SshClient();
 
   return new Promise((res, rej) => {
@@ -57,23 +57,6 @@ async function parseSshParams(params) {
   return connectionConfig;
 }
 
-async function resolveTargetPath(params) {
-  const {
-    getSafeStat,
-    sourcePath,
-    targetPath,
-    altBasename,
-  } = params;
-
-  let resolvedTargetPath = targetPath || "./";
-  const sourcePathStat = await getSafeStat(resolvedTargetPath);
-  if (sourcePathStat.exists && sourcePathStat.isDirectory()) {
-    resolvedTargetPath = path.join(resolvedTargetPath, altBasename || path.basename(sourcePath));
-  }
-
-  return resolvedTargetPath;
-}
-
 async function safeRemoteStat(scpClient, remotePath) {
   let stat;
   try {
@@ -104,8 +87,7 @@ function commonScpErrorsCatcher(error) {
 
 module.exports = {
   commonScpErrorsCatcher,
-  resolveTargetPath,
   parseSshParams,
-  sshConnect,
+  createSshConnection,
   safeRemoteStat,
 };
