@@ -1,3 +1,19 @@
+// As of today (13.01.2023) "ssh2" package does not support ssh-rsa algorithm
+// which is currently supported by OpenSSH, so this plugin would not work in
+// some cases. A forked version of "ssh2" - "ssh2-1200-fix" package includes
+// patch for this issue, that's why the plugin is using "ssh2-1200-fix" package
+// instead of "ssh2". See https://github.com/mscdex/ssh2/pull/1200 for more details.
+// This works fine for Execute Command method but for secure copy the plugin
+// is using "node-scp" package, which under the hood is using the "ssh2" package.
+// From a user's point of view, the same credentials will work for Execute Command
+// method, but not for other methods. To fix this issue, we modified the require
+// function to replace all "ssh2" require calls with "ssh2-1200-fix".
+// We are aware that this solution is a huge no-no in JavaScript, but since this
+// happens only in the scope of the plugin, and we didn't come up with any better
+// solution, we agreed on that.
+// This way plugin works as intended, this can be removed once "ssh2" package
+// includes patch for ssh-rsa algorithm.
+
 const Module = require("module");
 
 const originalRequire = Module.prototype.require;
