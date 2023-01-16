@@ -4,7 +4,6 @@
   "type": "executer",
   "main": "app.js",
   "execProgram": "node",
-  "exposeRoute": false,
   "imgUrl": "logo.png",
   "version": "1.0.0",
   "description": "Kaholo Plugin with SSH utilities, such as remote command execution and secure copy.",
@@ -68,7 +67,7 @@
           "name": "command",
           "viewName": "Command",
           "type": "text",
-          "description": "The command to execute on the remote host.",
+          "description": "The command to execute on the remote host",
           "placeholder": "uptime",
           "required": true
         }
