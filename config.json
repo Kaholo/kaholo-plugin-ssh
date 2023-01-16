@@ -6,10 +6,18 @@
   "execProgram": "node",
   "imgUrl": "logo.png",
   "version": "1.0.0",
-  "description": "Kaholo Plugin with SSH utilities, such as remote command execution and secure copy.",
+  "description": "Securely execute commands and copy files to and from remote servers using SSH and SCP.",
   "category": "Basic Tools",
   "keywords": [
-    "ssh"
+    "ssh",
+    "scp",
+    "secure",
+    "copy",
+    "sftp",
+    "keys",
+    "remote",
+    "command",
+    "telnet"
   ],
   "auth": {
     "authId": "sshAccount",
@@ -34,20 +42,20 @@
         "name": "password",
         "viewName": "Password",
         "type": "vault",
-        "description": "Password to authenticate with the host. In case both SSH Key and Password parameters are provided, the SSH Key has priority."
+        "description": "Password to authenticate with the host. This is not commonly required if an SSH key is used."
       },
       {
         "name": "privateKey",
         "viewName": "SSH Key",
         "type": "vault",
-        "description": "Key to authenticate with the host. This parameter accepts both the SSH key file content and a path to the SSH key file on the agent.",
+        "description": "SSH key to authenticate with the host.",
         "placeholder": "-----BEGIN OPENSSH PRIVATE KEY-----"
       },
       {
         "name": "privateKeyPassphrase",
         "viewName": "SSH Key Passphrase",
         "type": "vault",
-        "description": "Passphrase protecting the private key, set during key generation. Empty by default."
+        "description": "Passphrase protecting the private key, set during key generation, if any."
       },
       {
         "name": "port",
@@ -79,7 +87,7 @@
       "params": [
         {
           "name": "localPath",
-          "viewName": "Local Path",
+          "viewName": "Local Path (source)",
           "type": "string",
           "description": "Path on the Kaholo agent to the file or directory to be copied",
           "placeholder": "build/target/build202212031015.jar",
@@ -101,20 +109,20 @@
       "viewName": "Secure Copy from Remote Host",
       "params": [
         {
+          "name": "remotePath",
+          "viewName": "Remote Path (source)",
+          "type": "string",
+          "description": "Path on the remote server to the file or directory to be copied",
+          "placeholder": "/opt/testsuite/run20221214",
+          "required": true,
+          "learnUrl": "https://en.wikipedia.org/wiki/Secure_copy_protocol"
+        },
+        {
           "name": "localPath",
           "viewName": "Local Path",
           "type": "string",
           "description": "Path on the Kaholo agent to which the file or directory will be copied",
           "placeholder": "testsuite/results/",
-          "learnUrl": "https://en.wikipedia.org/wiki/Secure_copy_protocol"
-        },
-        {
-          "name": "remotePath",
-          "viewName": "Remote Path",
-          "type": "string",
-          "description": "Path on the remote server to the file or directory to be copied",
-          "placeholder": "/opt/testsuite/run20221214",
-          "required": true,
           "learnUrl": "https://en.wikipedia.org/wiki/Secure_copy_protocol"
         }
       ]
