@@ -1,9 +1,10 @@
+const path = require("path");
 const { access, lstat } = require("fs/promises");
-const fs = require("fs");
+const { constants: { F_OK } } = require("fs");
 
 async function assertPath(value) {
   try {
-    await access(value, fs.constants.F_OK);
+    await access(value, F_OK);
   } catch {
     throw new Error(`Path ${value} does not exist!`);
   }
@@ -44,14 +45,47 @@ function handleCommandOutput(commandOutput) {
   return commandOutput.stdout;
 }
 
+async function safeStat(localPath) {
+  let stat = {};
+  try {
+    stat = await lstat(localPath);
+    Object.defineProperty(stat, "exists", {
+      value: true,
+    });
+  } catch {
+    stat = { exists: false };
+  }
+
+  return stat;
+}
+
 async function isPathFile(value) {
-  const pathStat = await lstat(value);
-  return pathStat.isFile();
+  const pathStat = await safeStat(value);
+  return pathStat.exists && pathStat.isFile();
+}
+
+async function resolveTargetPath(params) {
+  const {
+    getSafeStat,
+    sourcePath,
+    targetPath,
+    altBasename,
+  } = params;
+
+  let resolvedTargetPath = targetPath || "./";
+  const sourcePathStat = await getSafeStat(resolvedTargetPath);
+  if (sourcePathStat.exists && sourcePathStat.isDirectory()) {
+    resolvedTargetPath = path.join(resolvedTargetPath, altBasename || path.basename(sourcePath));
+  }
+
+  return resolvedTargetPath;
 }
 
 module.exports = {
   assertPath,
+  safeStat,
   handleChildProcess,
   handleCommandOutput,
   isPathFile,
+  resolveTargetPath,
 };
