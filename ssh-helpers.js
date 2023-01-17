@@ -1,8 +1,4 @@
-const { readFile } = require("fs/promises");
-const path = require("path");
 const { Client: SshClient } = require("ssh2-1200-fix");
-
-const { assertPath } = require("./helpers");
 
 function createSshConnection(connectionConfig) {
   const sshClient = new SshClient();
@@ -35,21 +31,12 @@ async function parseSshParams(params) {
     port,
   };
 
-  if (!privateKey) {
+  if (password) {
     connectionConfig.password = password;
-    return connectionConfig;
   }
-
-  let keyContent = privateKey;
-  if (!isSshPrivateKey(privateKey)) {
-    console.error("Assuming Private Key parameter is a path, attempting to read the file contents.");
-
-    const absolutePathToPrivateKey = path.resolve(privateKey);
-    await assertPath(absolutePathToPrivateKey);
-    keyContent = await readFile(absolutePathToPrivateKey);
+  if (privateKey) {
+    connectionConfig.privateKey = privateKey;
   }
-
-  connectionConfig.privateKey = keyContent;
   if (privateKeyPassphrase) {
     connectionConfig.passphrase = privateKeyPassphrase;
   }
@@ -69,13 +56,6 @@ async function safeRemoteStat(scpClient, remotePath) {
   }
 
   return stat;
-}
-
-function isSshPrivateKey(value) {
-  const containsBeginSignature = /^-----BEGIN [\w\s]{1,50} KEY-----/.test(value);
-  const containsEndSignature = /-----END [\w\s]{1,50} KEY-----/g.test(value);
-
-  return containsBeginSignature && containsEndSignature;
 }
 
 function commonScpErrorsCatcher(error) {
