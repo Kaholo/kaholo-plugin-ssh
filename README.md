@@ -1,85 +1,85 @@
-# Kaholo SystemXYZ Plugin
-This plugin integrates ACME, inc. SystemXYZ with Kaholo, providing access to SystemXYZ's alerting functionality, for example sending a Ex message or setting an Zed alarm to notify someone of the results of a Kaholo Pipeline Action. For triggering Kaholo Pipelines from SystemXYZ, please see the Kaholo [SystemXYZ trigger](https://github.com/Kaholo/kaholo-trigger-systemxyz) instead.
+# Kaholo SSH Plugin
+The Secure Shell Protocol (SSH) is a cryptographic network protocol for operating network services securely over an unsecured network. Secure copy protocol (SCP) is a means of securely transferring computer files between a local host and a remote host. This plugin extends Kaholo functionality to include using SSH and SCP.
 
 ## Prerequisites
-This plugin works with SystemXYZ version 4.0 and later, both SaaS platform and locally hosted versions.
-
-The following SystemXYZ APIs must be enabled for 3rd party access in the SystemXYZ Platform. The Kaholo plugin's service ID string is "kaholo-plugin-da2de162". SystemXYZ does not support 3rd party access to the Wy API so there are no Wy controller methods in the plugin.
-
->**SystemXYZ Ex API**
->
->**SystemXYZ Zed API**
-
-The SystemXYZ connectivity package must be installed on Kaholo agents. A `Test API` method is provided in the plugin. Check Parameter "Install API" in order to automatically install the SystemXYZ connectivity package. Alternatively, ask your Kaholo administrator to follow the [installation instructions](https://www.systemxyz.com.nz/install_connectivity_package/v4) on the SystemXYZ webite.
+To make use of the SSH plugin, users will require an account enabled to use SSH and SCP on some remote machine. This remote machine must also be reachable on the network by the Kaholo agent.
 
 ## Access and Authentication
-The plugin accesses SystemXYZ using the same URL as the web console, e.g. https://your-account.systemxyz.com.nz/. However, authentication with user/password is not permitted for automated processes.
+SSH (and SCP) access is most commonly controlled by means of keys - a public/private key pair. The plubic key is used to grant access on the remote machine and the private key is then used to authenticate and communicate securely with that remote. However, it is possible to use SSH with user/password instead of keys, or using a key with a passphrase, or a combination of these.
 
-Instead the plugin uses SystemXYZ service tokens to authenticate. A SystemXYZ service token is a string that begins `XYZ-`, for example `XYZ-9ef6df656f9db28d4feaac0c0c6855bc`.  To get an appropriate service token, ask your SystemXYZ administrator for one that has permissions for the following actions:
-* ex-send
-* ex-send-email (only if email feature is used)
-* zed-readgroups
-* zed-triggergroups
-* xyz-vieworg
-* xyz-viewalarms
+public/private key pairs are commonly generated using command `ssh-keygen`. The private key is kept safe and secret by the owner of the key. The public key is emailed to the administrator of the remote machine, where he creates an account for the user and puts the public key in file `~/.ssh/authorized_keys`. The user can then use SSH and SCP like so:
 
-You will also what to specify which Zed groups you will access, or alternately if the service token is granted `zed-any`, the plugin will be able to read and trigger all SystemXYZ groups.
+    # open command shell to remote machine
+    ssh -i private.key username@remote-machine.mynet.org
 
-You may have more than one service token, these are vaulted in the Kaholo Vault. The service token is needed for Parameter "XYZ Service Token" as described below.
+    # copy file "myfile" to remote machine
+    scp -i private.key myfile username@remote-machine.mynet.org:myfile
+
+If passwords or passphrases are required these are asked either interactively or included in the command line. See the documentation on commands `ssh` and `scp` for details on these and other less common use cases.
+
+The details of the connection are managed by Kaholo in a Kaholo Account. This provides convenient grouping of authentication parameters and use by default. This allows you to configure the account just once and then select it from a drop-down list each time you use an SSH Plugin action.
+
+Access and configure accounts either in Settings | Plugins | SSH (the name of the plugin in this list is a hyperlink), or at the action level in field "Account", where "+ Add New Plugin Account" is available for selection.
+
+### Account Parameter: Name ###
+An arbitrary name to help you identify the account. It is suggested to use something descriptive of the user and systems that can be accessed using the account, e.g. "SSH alex@devops.int".
+
+### Account Parameter: Hostname ###
+This parameter is either the hostname or the IP address of the machine being accessed.
+
+### Account Parameter: Username ###
+The username on the remote machine, for whom the corresponding public key can be found in file `~/.ssh/authorized_keys`.
+
+### Account Parameter: Password (Vault) ###
+This is uncommonly used but if you SSH using password instead of a key, or both key and password, then put the password here. It is protected from logs, error messages, and appearing in configurations by the Kaholo Vault.
+
+### Account Parameter: SSH Key (Vault) ###
+This is the SSH PRIVATE Key. It is normally a file with several lines that begins with a line similar to this:
+
+    -----BEGIN OPENSSH PRIVATE KEY-----
+
+This key is also protected in the Kaholo Vault. If you SSH using username and password but no key, then leave this field empty.
+
+### Account Parameter: SSH Key Passphrase (Vault) ###
+Sometimes SSH keys are given a passphrase so to be used, one must both have the key and know the passphrase - a sort of 2-factor authentication scheme. If your SSH key comes with a passphrase, put the passphrase here.
+
+### Account Parameter: Port ###
+SSH is almost always on port 22 and if so, you may put that here or leave it empty. If your remote machine is listening for SSH connections on some other port, then put the port number here.
 
 ## Plugin Installation
 For download, installation, upgrade, downgrade and troubleshooting of plugins in general, see [INSTALL.md](./INSTALL.md).
 
 ## Plugin Settings
-Plugin settings act as default parameter values. If configured in plugin settings, the action parameters may be left unconfigured. Action parameters configured anyway over-ride the plugin-level settings for that Action.
-* Default XYZ Endpoint - The URL of your SystemXYZ installation, e.g. `https://your-account.systemxyz.com.nz/`
-* Default Zed Alarm Group - The Zed Alarm Group to use with Zed alarm methods, e.g. `zed-group-one`. Not used for Ex message-related methods.
-* Default Service Token (Vault) - The service token, stored in the Kaholo vault for authentication and access. e.g. `XYZ-9ef6df656f9db28d4feaac0c0c6855bc`
+This plugin has no plugin settings.
 
-## Pipelining Alarm Messaging
-A common use case for this plugin is to prototype Wy controller notifications by catching Zed Hooks, applying logic, and sending Ex messages as appropriate. To do this the following steps are needed:
-1. Install and configure the Kaholo [SystemXYZ trigger](https://github.com/Kaholo/kaholo-trigger-systemxyz) to be activated by a [SystemXYZ Zed Hook](https://www.systemxyz.com.nz/zed_hooks/v4).
-1. Use the trigger to start your prototype Kaholo pipeline.
-1. Use method Read Zed Alarms to collect the active alarm list and details.
-1. Apply your logic using the Kaholo Code page and/or Kaholo Conditional Code.
-1. Use method Send Ex Message if your logic determines it appropriate.
+## method Execute Command
+This method simply executes a command line on the remote machine via SSH, similar to the Command Line plugin. The only parameter required is the command itself.
 
-## Method: Test API
-This method does a trivial test of the SystemXYZ connectivity package installed on the Kaholo agent, in order to validate that it is installed correctly and can network connect to the XYZ Endpoint. It returns only the version number of the SystemXYZ system and does not require a service token.
+## method Secure Copy to Remote Host
+This method copies files and directories from the Kaholo Agent to the remote Host using a secure connection.
 
-### Parameters
-Required parameters have an asterisk (*) next to their names.
-* XYZ Endpoint * - as described above in [plugin settings](#plugin-settings)
-* Install API (checkbox) - if checked and the connectivity package is not found on the agent, the plugin will attempt to automatically install it.
+### parameter Local Path (Source)
+This is the path, relative or absolute, to a file or directory on the Kaholo agent. If a directory, all subdirectories and files within are recursively copied.
 
-## Method: Send Ex Message
-This method composes an Ex Message to send to SystemXYZ users and/or groups. Message bodies may be in JSON, MD, HTML, or plain text format. Malformed JSON, MD, or HTML results in a plain text message. Combinations of users and groups are permitted. Users listed who are also group members or member in more than one group get the message only once.
+### parameter Remote Path
+This is the path, relative or absolute, to the file or directory on the remote machine. It is optional, and if omitted the file or directory will be copied over with the same name into the user's home directory. If used, this path can be used to relocate or rename files and directories, in a very similar way to the command line version of `scp`. Whether files or directories are renamed or overwritten depends on if the path is a file or a directory and whether or not it exists.
 
-> NOTE: Parameters left unconfigured get "Kaholo" by default, including message body and title. If parameter `Email` is selected, parameter `From` must be a valid user name or it will be rejected by SystemXYZ with `HTTP 404 - Page not found`. This also requires the service token have the special permission `ex-send-email`, otherwise you get the same HTTP 404 error.
+SCP will overwrite files and directories without warning, so familiarize yourself with how it works before putting it to production use.
 
-### Parameters
-Required parameters have an asterisk (*) next to their names.
-* XYZ Endpoint * - as described above in [plugin settings](#plugin-settings)
-* Service Token * - as described above in [plugin settings](#plugin-settings)
-* Message Title - plain text one-line title of the message
-* Message Body - the body of the message in JSON, MD, HTML, or plain text format
-* Recipients * - the list of recipients, either usernames or group names, one per line
-* From - indicates the source of the message, either a valid user name or arbitrary text string
-* Email - if checked and SystemXYZ is linked to an email system, the message is sent out as an email instead of a SystemXYZ Ex message.
+The plugin outputs the full remote path used in Final Results, so you may look there to confirm the copy happened as you intended.
 
-## Method: Read Zed Alarms
-This method reads a Zed Alarm group from SystemXYZ whether or not any of the alarms are active. It is commonly used with the Kaholo [SystemXYZ trigger](https://github.com/Kaholo/kaholo-trigger-systemxyz) and [SystemXYZ Zed Hooks](https://www.systemxyz.com.nz/zed_hooks/v4). The trigger provides the timely response to an alarm, while this method provides the details of the alarm.
+## method Secure Copy from Remote Host
+This works just the like "Secure Copy to Remote Host" except it copies files in the opposite direction - from the remote to the Kaholo agent. The parameters work the same only in this method the Remote Path is the source of files and directories to copy.
 
-If parameter `Zed Hook Code` is configured, the details on the triggering alarm are provided. If parameter `Alarm Group` is provided the details on all alarms (active or not) are provided. If both are configured, details on both are provided, even if the code refers to an alarm not in that group. This is useful in overcoming cross-group limitations in SystemXYZ alarms.
+The plugin outputs the full remote path used in Final Results, so you may look there to confirm the copy happened as you intended.
 
-The Final Result in Kaholo is a JSON document of the same format as the equivalent [SystemXYZ Alarm Export](https://www.systemxyz.com.nz/alarm_export/v4).
+## method Secure Copy from Vault to Remote Host
+This method takes an item from the Kaholo Vault and writes it to a file on a remote host. This is useful for installing credentials and security keys and other sensitive files to remote machines, and also for destroying them - e.g., by overwriting them with a random string stored in the Kaholo Vault. (If you want to write a Kaholo Vault item to the local Kaholo Agent, use the Text Editor plugin method Create File From Vault instead.)
 
-### Parameters
-Required parameters have an asterisk (*) next to their names.
-* XYZ Endpoint * - as described above in [plugin settings](#plugin-settings)
-* Service Token * - as described above in [plugin settings](#plugin-settings)
-* Zed Hook Code - a code string from Zed Hooks, e.g. `zed-20220329aad`
-* Zed Alarm Group - a Zed alarm group, e.g. `zed-group-one`
+The plugin outputs the full remote path used in Final Results, so you may look there to confirm the copy happened as you intended.
 
-## Method: Set Zed Alarm
-This method is not yet implemented. If you are interested in setting Zed alarms from Kaholo, please let us know! support@kaholo.io.
+### parameter Vault Item (Vault)
+Select which Vault Item it is you want to write to a file on the remote machine.
+
+### parameter: Remote Path
+Provide a path and file name on the remote machine where the Vault item will be written. If left empty, the file will go in the remote user's home directory and be given an arbitrary name.
