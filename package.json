@@ -1,30 +1,28 @@
 {
-  "name": "kaholo-plugin-template",
-  "version": "1.0.0",
-  "description": "A template for Kaholo plugin development",
+  "name": "kaholo-plugin-ssh",
   "main": "app.js",
   "scripts": {
-    "test": "npx jest .",
     "lint": "npx eslint .",
     "lint:fix": "npx eslint . --fix"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Kaholo/kaholo-plugin-template.git"
+    "url": "git+https://github.com/Kaholo/kaholo-plugin-ssh.git"
   },
   "author": "Kaholo",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Kaholo/kaholo-plugin-template/issues"
+    "url": "https://github.com/Kaholo/kaholo-plugin-ssh/issues"
   },
-  "homepage": "https://github.com/Kaholo/kaholo-plugin-template#readme",
+  "homepage": "https://github.com/Kaholo/kaholo-plugin-ssh#readme",
   "dependencies": {
-    "@kaholo/plugin-library": "^2.0.0"
+    "@kaholo/plugin-library": "^2.1.2",
+    "node-scp": "^0.0.22",
+    "ssh2-1200-fix": "^1.11.1"
   },
   "devDependencies": {
     "eslint": "^8.8.0",
     "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-plugin-import": "^2.25.4",
-    "jest": "^27.5.0"
+    "eslint-plugin-import": "^2.25.4"
   }
 }
