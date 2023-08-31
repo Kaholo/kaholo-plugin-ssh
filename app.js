@@ -44,7 +44,8 @@ async function executeCommand(params) {
     command,
   });
 
-  return handleCommandOutput(commandOutput);
+  await handleCommandOutput(commandOutput);
+  return "";
 }
 
 async function secureCopyToRemoteHost(params) {

@@ -70,6 +70,7 @@
     {
       "name": "executeCommand",
       "viewName": "Execute Command",
+      "allowEmptyResult": true,
       "params": [
         {
           "name": "command",

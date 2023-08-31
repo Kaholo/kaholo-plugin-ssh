@@ -14,14 +14,20 @@ function handleChildProcess(childProcessInstance, options) {
   const stdoutChunks = [];
   const stderrChunks = [];
 
-  childProcessInstance.stdout.on("data", (chunk) => stdoutChunks.push(chunk));
-  childProcessInstance.stderr.on("data", (chunk) => stderrChunks.push(chunk));
+  childProcessInstance.stdout.on("data", (chunk) => {
+    stdoutChunks.push(chunk);
+    process.stdout.write(chunk ?? "");
+  });
+  childProcessInstance.stderr.on("data", (chunk) => {
+    stderrChunks.push(chunk);
+    process.stdout.write(chunk ?? "");
+  });
 
   return new Promise((res, rej) => {
     childProcessInstance.on(options?.exitSignal || "exit", (exitCode) => {
       const output = {
-        stderr: stderrChunks.join("\n"),
-        stdout: stdoutChunks.join("\n"),
+        stderr: stderrChunks.join(""),
+        stdout: stdoutChunks.join(""),
         code: exitCode,
       };
 
