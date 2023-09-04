@@ -20,14 +20,14 @@ function handleChildProcess(childProcessInstance, options) {
   });
   childProcessInstance.stderr.on("data", (chunk) => {
     stderrChunks.push(chunk);
-    process.stdout.write(chunk ?? "");
+    process.stderr.write(chunk ?? "");
   });
 
   return new Promise((res, rej) => {
     childProcessInstance.on(options?.exitSignal || "exit", (exitCode) => {
       const output = {
-        stderr: stderrChunks.join(""),
-        stdout: stdoutChunks.join(""),
+        stderr: stderrChunks,
+        stdout: stdoutChunks,
         code: exitCode,
       };
 
@@ -43,12 +43,20 @@ function handleChildProcess(childProcessInstance, options) {
 
 function handleCommandOutput(commandOutput) {
   if (commandOutput.stderr && !commandOutput.stdout) {
-    throw new Error(commandOutput.stderr);
+    throw new Error(commandOutput.stderr.join("\n"));
   } else if (commandOutput.stderr) {
-    console.error(commandOutput.stderr);
+    console.error(commandOutput.stderr.join("\n"));
   }
 
-  return commandOutput.stdout;
+  const jsonChunks = commandOutput.stdout.filter(isValueJson).map(JSON.parse);
+
+  if (jsonChunks.length === 0) {
+    return "";
+  }
+  if (jsonChunks.length === 1) {
+    return jsonChunks[0];
+  }
+  return jsonChunks;
 }
 
 async function safeStat(localPath) {
@@ -87,11 +95,21 @@ async function resolveTargetPath(params) {
   return resolvedTargetPath;
 }
 
+function isValueJson(value) {
+  try {
+    JSON.parse(value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 module.exports = {
   assertPath,
   safeStat,
   handleChildProcess,
   handleCommandOutput,
   isPathFile,
+  isValueJson,
   resolveTargetPath,
 };
