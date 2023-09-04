@@ -42,7 +42,9 @@ function handleChildProcess(childProcessInstance, options) {
 }
 
 function handleCommandOutput(commandOutput) {
-  const jsonChunks = commandOutput.stdout.filter(isValueJson).map(JSON.parse);
+  const jsonChunks = commandOutput.stdout
+    .map(tryParseJson)
+    .filter((v) => v !== undefined);
 
   if (jsonChunks.length === 0) {
     return "";
@@ -89,12 +91,11 @@ async function resolveTargetPath(params) {
   return resolvedTargetPath;
 }
 
-function isValueJson(value) {
+function tryParseJson(value) {
   try {
-    JSON.parse(value);
-    return true;
+    return JSON.parse(value);
   } catch {
-    return false;
+    return undefined;
   }
 }
 
@@ -104,6 +105,5 @@ module.exports = {
   handleChildProcess,
   handleCommandOutput,
   isPathFile,
-  isValueJson,
   resolveTargetPath,
 };
