@@ -42,12 +42,6 @@ function handleChildProcess(childProcessInstance, options) {
 }
 
 function handleCommandOutput(commandOutput) {
-  if (commandOutput.stderr && !commandOutput.stdout) {
-    throw new Error(commandOutput.stderr.join("\n"));
-  } else if (commandOutput.stderr) {
-    console.error(commandOutput.stderr.join("\n"));
-  }
-
   const jsonChunks = commandOutput.stdout.filter(isValueJson).map(JSON.parse);
 
   if (jsonChunks.length === 0) {
