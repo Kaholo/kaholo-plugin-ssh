@@ -5,8 +5,8 @@
   "main": "app.js",
   "execProgram": "node",
   "imgUrl": "logo.png",
-  "version": "1.0.0",
-  "description": "Securely execute commands and copy files to and from remote servers using SSH and SCP.",
+  "version": "1.1.0",
+  "description": "Execute remote commands and copy files with SSH and SCP",
   "category": "Basic Tools",
   "keywords": [
     "ssh",
@@ -26,7 +26,7 @@
         "name": "hostname",
         "viewName": "Hostname",
         "type": "string",
-        "description": "Hostname or IP address.",
+        "description": "Hostname or IP address",
         "placeholder": "192.168.10.7",
         "required": true
       },
@@ -34,7 +34,7 @@
         "name": "username",
         "viewName": "Username",
         "type": "string",
-        "description": "Username to authenticate with the host.",
+        "description": "Username to authenticate with the host",
         "placeholder": "root",
         "required": true
       },
@@ -42,26 +42,26 @@
         "name": "password",
         "viewName": "Password",
         "type": "vault",
-        "description": "Password to authenticate with the host. This is not commonly required if an SSH key is used."
+        "description": "Password to authenticate with the host, if required"
       },
       {
         "name": "privateKey",
         "viewName": "SSH Key",
         "type": "vault",
-        "description": "SSH key to authenticate with the host.",
-        "placeholder": "-----BEGIN OPENSSH PRIVATE KEY-----"
+        "description": "Private SSH key to authenticate with the host, if required"
       },
       {
         "name": "privateKeyPassphrase",
         "viewName": "SSH Key Passphrase",
         "type": "vault",
-        "description": "Passphrase protecting the private key, set during key generation, if any."
+        "description": "Passphrase for SSH key, if required"
       },
       {
         "name": "port",
         "viewName": "Port",
         "type": "int",
-        "description": "The port used to connect with SSH to the remote host.",
+        "description": "Port used for SSH to the remote host",
+        "placeholder": 22,
         "default": 22
       }
     ]
@@ -70,12 +70,13 @@
     {
       "name": "executeCommand",
       "viewName": "Execute Command",
+      "allowEmptyResult": true,
       "params": [
         {
           "name": "command",
           "viewName": "Command",
           "type": "text",
-          "description": "The command to execute on the remote host",
+          "description": "Command to execute on the remote host",
           "placeholder": "uptime",
           "required": true
         }
